@@ -30,19 +30,19 @@ logging.config.dictConfig({
     }
 })
 
-@app.route('/check/<oktazon>', methods=['GET'])
-def check_student(oktazon):
+@app.route('/check', methods=['GET'])
+def check_student():
     try:
         session = Session()
         client = Client(
-            'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/SingleWsdl',
+            'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc',
             transport=Transport(session=session)
         )
 
-        # Szolgáltatás hívása
+        # Szolgáltatás hívása fix teszt azonosítóval
         result = client.service.Ellenoriz(
             apiKulcs='Hv-Tst-t312-r34q-v921-5318c',
-            oktatasiAzonosito=oktazon
+            oktatasiAzonosito='76221103192'  # Fix teszt azonosító
         )
         
         return jsonify({
