@@ -1,77 +1,89 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 import requests
+import urllib3
+from datetime import datetime
+
+# SSL figyelmeztetések letiltása
+urllib3.disable_warnings()
 
 app = Flask(__name__)
 
-# SOAP konfiguráció
-API_URL = "https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc"  # Teszt környezet URL-je
-SOAP_ACTION = "http://www.oktatas.hu/IOktigKartyaelfogadoPublicService/Keres"  # SOAP Action
-API_KEY = "TESZT"  # Teszt API kulcs (valós környezetben cseréld le az éles kulcsra)
-
-@app.route("/ellenoriz", methods=["POST"])
-def ellenoriz_diak():
-    """
-    Diákigazolvány ellenőrzése SOAP segítségével.
-    """
-    # Kérés JSON body kinyerése
-    data = request.get_json()
-
-    if not data or "Azonosito" not in data:
-        return jsonify({"error": "A 'Azonosito' mező kötelező"}), 400
-
-    # SOAP XML kérés összeállítása
-    azonosito = data["Azonosito"]
-    nev = data.get("JogosultNev", {})
-    keresztnev = nev.get("Keresztnev", "")
-    vezeteknev = nev.get("Vezeteknev", "")
-    szuletesi_ev = data.get("SzuletesiEv", "")
-    neme = data.get("Neme", "")
-    munkarend = data.get("Munkarend", "")
-    intezmeny_rovid_nev = data.get("IntezmenyRovidNev", "")
-    intezmeny_telepules = data.get("IntezmenyTelepules", "")
-    lakohely_telepules = data.get("LakohelyTelepules", "")
-
-    # SOAP XML kérést készítünk
-    soap_request = f"""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                                       xmlns:okt="http://www.oktatas.hu/" 
-                                       xmlns:okt1="http://www.oktatas.hu">
-        <soapenv:Header/>
-        <soapenv:Body>
-            <okt:Keres>
-                <okt1:ApiKulcs>{API_KEY}</okt1:ApiKulcs>
-                <okt1:Azonosito>{azonosito}</okt1:Azonosito>
-                <okt1:JogosultNev>
-                    <okt1:Elonev></okt1:Elonev>
-                    <okt1:Keresztnev>{keresztnev}</okt1:Keresztnev>
-                    <okt1:Vezeteknev>{vezeteknev}</okt1:Vezeteknev>
-                </okt1:JogosultNev>
-                <okt1:SzuletesiEv>{szuletesi_ev}</okt1:SzuletesiEv>
-                <okt1:Neme>{neme}</okt1:Neme>
-                <okt1:Munkarend>{munkarend}</okt1:Munkarend>
-                <okt1:IntezmenyRovidNev>{intezmeny_rovid_nev}</okt1:IntezmenyRovidNev>
-                <okt1:IntezmenyTelepules>{intezmeny_telepules}</okt1:IntezmenyTelepules>
-                <okt1:LakohelyTelepules>{lakohely_telepules}</okt1:LakohelyTelepules>
-            </okt:Keres>
-        </soapenv:Body>
-    </soapenv:Envelope>"""
-
-    # SOAP kérés küldése
-    headers = {
-        "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": SOAP_ACTION
-    }
-
+@app.route('/check-student', methods=['GET'])
+def check_student():
     try:
-        response = requests.post(API_URL, data=soap_request.encode("utf-8"), headers=headers)
-        response.raise_for_status()  # Hibák ellenőrzése
+        # Előre definiált SOAP kérés XML sablon a dokumentáció alapján
+        soap_request = '''
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
+            <soapenv:Header/>
+            <soapenv:Body>
+                <okt:DiakigazolvanyJogosultsagLekerdezes>
+                    <okt:ApiKulcs>TESZT</okt:ApiKulcs>
+                    <okt:Azonosito>1210000825</okt:Azonosito>
+                    <okt:IntezmenyRovidNev>Balassi Bálint Gimnázium</okt:IntezmenyRovidNev>
+                    <okt:IntezmenyTelepules>Eger</okt:IntezmenyTelepules>
+                    <okt:JogosultNev>
+                        <okt:Elonev/>
+                        <okt:Keresztnev>Eszmerálda</okt:Keresztnev>
+                        <okt:Vezeteknev>Koncsíta</okt:Vezeteknev>
+                    </okt:JogosultNev>
+                    <okt:LakohelyTelepules>Nagykanizsa</okt:LakohelyTelepules>
+                    <okt:Munkarend>NAPPALI</okt:Munkarend>
+                    <okt:Neme>N</okt:Neme>
+                    <okt:Oktazon>459632</okt:Oktazon>
+                    <okt:SzuletesiEv>2004</okt:SzuletesiEv>
+                </okt:DiakigazolvanyJogosultsagLekerdezes>
+            </soapenv:Body>
+        </soapenv:Envelope>
+        '''
 
-        # SOAP válasz visszaadása JSON-ként
-        return jsonify({"response": response.text}), 200
+        # SOAP kérés küldése
+        url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
+        
+        headers = {
+            'Content-Type': 'text/xml;charset=UTF-8',
+            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/DiakigazolvanyJogosultsagLekerdezes',  # Pontosított SOAPAction
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/xml, application/xml'
+        }
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        print("SOAP kérés küldése...")
+        print(f"Kérés URL: {url}")
+        print(f"Kérés fejléc: {headers}")
+        print(f"Kérés törzse: {soap_request}")
 
+        response = requests.post(
+            url=url,
+            data=soap_request.encode('utf-8'),
+            headers=headers,
+            verify=False,  # FIGYELEM: A verify=False használata biztonsági kockázattal jár
+            timeout=30
+        )
 
-if __name__ == "__main__":
-    # A Flask szerver futtatása (IP-t és portot állíts be, ha szükséges)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+        print(f"Válasz státuszkód: {response.status_code}")
+        print(f"Válasz fejléc: {dict(response.headers)}")
+        print(f"Válasz törzse: {response.text}")
+
+        return jsonify({
+            "status": "success",
+            "http_status": response.status_code,
+            "headers": dict(response.headers),
+            "content_type": response.headers.get('content-type', ''),
+            "response": response.text
+        })
+
+    except Exception as e:
+        print(f"Hiba történt: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "error_type": str(type(e)),
+            "details": str(getattr(e, 'detail', '')),
+            "request": {
+                "url": url,
+                "headers": headers,
+                "body": soap_request
+            }
+        }), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
