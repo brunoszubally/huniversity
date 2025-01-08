@@ -16,22 +16,10 @@ def check_student():
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
             <soapenv:Header/>
             <soapenv:Body>
-                <okt:DiakigazolvanyJogosultsagLekerdezes>
-                    <okt:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt:ApiKulcs>
-                    <okt:Azonosito>1210000825</okt:Azonosito>
-                    <okt:IntezmenyRovidNev>Balassi Bálint Gimnázium</okt:IntezmenyRovidNev>
-                    <okt:IntezmenyTelepules>Eger</okt:IntezmenyTelepules>
-                    <okt:JogosultNev>
-                        <okt:Elonev/>
-                        <okt:Keresztnev>Eszmerálda</okt:Keresztnev>
-                        <okt:Vezeteknev>Koncsíta</okt:Vezeteknev>
-                    </okt:JogosultNev>
-                    <okt:LakohelyTelepules>Nagykanizsa</okt:LakohelyTelepules>
-                    <okt:Munkarend>NAPPALI</okt:Munkarend>
-                    <okt:Neme>N</okt:Neme>
-                    <okt:Oktazon>459632</okt:Oktazon>
-                    <okt:SzuletesiEv>2004</okt:SzuletesiEv>
-                </okt:DiakigazolvanyJogosultsagLekerdezes>
+                <okt:Keres>
+                    <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt:ApiKulcs>
+                    <okt1:Azonosito>1210000825</okt:Azonosito>
+                </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
         '''
