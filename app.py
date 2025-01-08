@@ -1,88 +1,77 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 import requests
-import urllib3
-from datetime import datetime
-
-urllib3.disable_warnings()
 
 app = Flask(__name__)
 
-@app.route('/check-student', methods=['GET', 'POST'])
-def check_student():
+# SOAP konfiguráció
+API_URL = "https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc"  # Teszt környezet URL-je
+SOAP_ACTION = "http://www.oktatas.hu/IOktigKartyaelfogadoPublicService/Keres"  # SOAP Action
+API_KEY = "TESZT"  # Teszt API kulcs (valós környezetben cseréld le az éles kulcsra)
+
+@app.route("/ellenoriz", methods=["POST"])
+def ellenoriz_diak():
+    """
+    Diákigazolvány ellenőrzése SOAP segítségével.
+    """
+    # Kérés JSON body kinyerése
+    data = request.get_json()
+
+    if not data or "Azonosito" not in data:
+        return jsonify({"error": "A 'Azonosito' mező kötelező"}), 400
+
+    # SOAP XML kérés összeállítása
+    azonosito = data["Azonosito"]
+    nev = data.get("JogosultNev", {})
+    keresztnev = nev.get("Keresztnev", "")
+    vezeteknev = nev.get("Vezeteknev", "")
+    szuletesi_ev = data.get("SzuletesiEv", "")
+    neme = data.get("Neme", "")
+    munkarend = data.get("Munkarend", "")
+    intezmeny_rovid_nev = data.get("IntezmenyRovidNev", "")
+    intezmeny_telepules = data.get("IntezmenyTelepules", "")
+    lakohely_telepules = data.get("LakohelyTelepules", "")
+
+    # SOAP XML kérést készítünk
+    soap_request = f"""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                                       xmlns:okt="http://www.oktatas.hu/" 
+                                       xmlns:okt1="http://www.oktatas.hu">
+        <soapenv:Header/>
+        <soapenv:Body>
+            <okt:Keres>
+                <okt1:ApiKulcs>{API_KEY}</okt1:ApiKulcs>
+                <okt1:Azonosito>{azonosito}</okt1:Azonosito>
+                <okt1:JogosultNev>
+                    <okt1:Elonev></okt1:Elonev>
+                    <okt1:Keresztnev>{keresztnev}</okt1:Keresztnev>
+                    <okt1:Vezeteknev>{vezeteknev}</okt1:Vezeteknev>
+                </okt1:JogosultNev>
+                <okt1:SzuletesiEv>{szuletesi_ev}</okt1:SzuletesiEv>
+                <okt1:Neme>{neme}</okt1:Neme>
+                <okt1:Munkarend>{munkarend}</okt1:Munkarend>
+                <okt1:IntezmenyRovidNev>{intezmeny_rovid_nev}</okt1:IntezmenyRovidNev>
+                <okt1:IntezmenyTelepules>{intezmeny_telepules}</okt1:IntezmenyTelepules>
+                <okt1:LakohelyTelepules>{lakohely_telepules}</okt1:LakohelyTelepules>
+            </okt:Keres>
+        </soapenv:Body>
+    </soapenv:Envelope>"""
+
+    # SOAP kérés küldése
+    headers = {
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": SOAP_ACTION
+    }
+
     try:
-        # SOAP kérés XML sablon a dokumentáció alapján
-        soap_request = '''
-        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
-            <soapenv:Header/>
-            <soapenv:Body>
-                <okt:Keres>
-                    <okt1:ApiKulcs>TESZT</okt1:ApiKulcs>
-                    <okt1:Azonosito>1210000825</okt1:Azonosito>
-                    <okt1:IntezmenyRovidNev>Balassi Bálint Gimnázium</okt1:IntezmenyRovidNev>
-                    <okt1:IntezmenyTelepules>Eger</okt1:IntezmenyTelepules>
-                    <okt1:JogosultNev>
-                        <okt1:Elonev/>
-                        <okt1:Keresztnev>Eszmerálda</okt1:Keresztnev>
-                        <okt1:Vezeteknev>Koncsíta</okt1:Vezeteknev>
-                    </okt1:JogosultNev>
-                    <okt1:LakohelyTelepules>Nagykanizsa</okt1:LakohelyTelepules>
-                    <okt1:Munkarend>NAPPALI</okt1:Munkarend>
-                    <okt1:Neme>N</okt1:Neme>
-                    <okt1:Oktazon>459632</okt1:Oktazon>
-                    <okt1:SzuletesiEv>2004</okt1:SzuletesiEv>
-                </okt:Keres>
-            </soapenv:Body>
-        </soapenv:Envelope>
-        '''
+        response = requests.post(API_URL, data=soap_request.encode("utf-8"), headers=headers)
+        response.raise_for_status()  # Hibák ellenőrzése
 
-        # SOAP kérés küldése
-        url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
-        
-        headers = {
-            'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/Keres',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'text/xml, application/xml'
-        }
+        # SOAP válasz visszaadása JSON-ként
+        return jsonify({"response": response.text}), 200
 
-        print("Sending SOAP request...")
-        print(f"Request URL: {url}")
-        print(f"Request headers: {headers}")
-        print(f"Request body: {soap_request}")
-        
-        response = requests.post(
-            url=url,
-            data=soap_request.encode('utf-8'),
-            headers=headers,
-            verify=False,
-            timeout=30
-        )
-        
-        print(f"Response status code: {response.status_code}")
-        print(f"Response headers: {dict(response.headers)}")
-        print(f"Response body: {response.text}")
-        
-        return jsonify({
-            "status": "success",
-            "http_status": response.status_code,
-            "headers": dict(response.headers),
-            "content_type": response.headers.get('content-type', ''),
-            "response": response.text
-        })
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "message": str(e),
-            "error_type": str(type(e)),
-            "details": str(getattr(e, 'detail', '')),
-            "request": {
-                "url": url,
-                "headers": headers,
-                "body": soap_request
-            }
-        }), 500
 
-if __name__ == '__main__':
-    app.run(debug=True) 
+if __name__ == "__main__":
+    # A Flask szerver futtatása (IP-t és portot állíts be, ha szükséges)
+    app.run(host="0.0.0.0", port=5000, debug=True)
