@@ -1,111 +1,40 @@
-from flask import Flask, jsonify
-from zeep import Client, Settings
-from zeep.transports import Transport
-from requests import Session
+import requests
 import urllib3
-import logging.config
-
-# Logging beállítása
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {
-        'verbose': {
-            'format': '%(name)s: %(message)s'
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'zeep.transports': {
-            'level': 'DEBUG',
-            'propagate': True,
-            'handlers': ['console'],
-        },
-    }
-})
-
 urllib3.disable_warnings()
 
-app = Flask(__name__)
-
-@app.route('/check', methods=['GET'])
-def check_student():
+def get_wsdl():
+    url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/xml,application/xml',
+        'Cache-Control': 'no-cache'
+    }
+    
     try:
-        # Session beállítása részletes hibakezeléssel
-        session = Session()
-        session.verify = False
-        session.headers = {
-            'User-Agent': 'Mozilla/5.0',
-            'Content-Type': 'text/xml;charset=UTF-8',
-            'Accept': '*/*',
-            'Connection': 'keep-alive'
-        }
-        
-        # Explicit timeout beállítása
-        session.timeout = 30
-        
-        transport = Transport(session=session, timeout=30, operation_timeout=20)
-        
-        wsdl_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
-        
-        # Debug információk kiírása
-        print(f"Connecting to WSDL: {wsdl_url}")
-        
-        settings = Settings(
-            strict=False,
-            xml_huge_tree=True,
-            force_https=False
-        )
-
-        client = Client(
-            wsdl_url,
-            transport=transport,
-            settings=settings
-        )
-
-        print("WSDL loaded successfully")
-        print("Available operations:", [op for op in client.service._operations.keys()])
-
-        result = client.service.DiakigazolvanyJogosultsagLekerdezes(
-            ApiKulcs='Hv-Tst-t312-r34q-v921-5318c',
-            Azonosito='1223433576',
-            IntezmenyRovidNev='KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
-            IntezmenyTelepules='GYÖNGYÖSPATA',
-            JogosultNev={
-                'Elonev': '',
-                'Keresztnev': 'Ádám',
-                'Vezeteknev': 'Misuta'
-            },
-            LakohelyTelepules='GYÖNGYÖS',
-            Munkarend='Nappali',
-            Neme='Ferfi',
-            Oktazon='76221103192',
-            SzuletesiEv=2010
+        print(f"Fetching WSDL from: {url}")
+        response = requests.get(
+            url, 
+            headers=headers,
+            verify=False,
+            timeout=30
         )
         
-        return jsonify({
-            "status": "success",
-            "response": result
-        })
+        print(f"Status Code: {response.status_code}")
+        print(f"Response Headers: {dict(response.headers)}")
         
+        if response.status_code == 200:
+            with open('service.wsdl', 'wb') as f:
+                f.write(response.content)
+            print("WSDL saved to service.wsdl")
+            return True
+        else:
+            print(f"Failed to fetch WSDL: {response.text}")
+            return False
+            
     except Exception as e:
-        error_details = {
-            "status": "error",
-            "message": str(e),
-            "error_type": str(type(e)),
-            "details": str(getattr(e, 'detail', '')),
-            "request_info": {
-                "url": wsdl_url,
-                "headers": dict(session.headers)
-            }
-        }
-        print("Error details:", error_details)
-        return jsonify(error_details), 500
+        print(f"Error: {str(e)}")
+        return False
 
-if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+if __name__ == "__main__":
+    get_wsdl() 
