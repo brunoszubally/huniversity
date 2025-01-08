@@ -11,6 +11,22 @@ urllib3.disable_warnings()
 
 app = Flask(__name__)
 
+# Alapértelmezett értékek
+DEFAULT_VALUES = {
+    'apiKulcs': 'Hv-Tst-t312-r34q-v921-5318c',
+    'azonosito': '1223433576',
+    'intezmenyRovidNev': 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
+    'intezmenyTelepules': 'GYÖNGYÖSPATA',
+    'elonev': '',
+    'keresztnev': 'Ádám',
+    'vezeteknev': 'Misuta',
+    'lakohelyTelepules': 'GYÖNGYÖS',
+    'munkarend': 'Nappali',
+    'neme': 'Ferfi',
+    'oktazon': '76221103192',
+    'szuletesiEv': 2010
+}
+
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({
@@ -52,7 +68,7 @@ def get_wsdl():
             "error_type": str(type(e))
         }), 500
 
-@app.route('/check-student', methods=['POST'])
+@app.route('/check-student', methods=['GET', 'POST'])
 def check_student():
     try:
         session = Session()
@@ -77,29 +93,43 @@ def check_student():
             settings=settings
         )
 
-        # Request adatok a POST body-ból
-        data = request.get_json()
+        # Ha van POST body, használjuk azt, egyébként az alapértelmezett értékeket
+        data = request.get_json() if request.is_json else {}
         
         result = client.service.DiakigazolvanyJogosultsagLekerdezes(
-            ApiKulcs=data.get('apiKulcs', 'Hv-Tst-t312-r34q-v921-5318c'),
-            Azonosito=data.get('azonosito', '1223433576'),
-            IntezmenyRovidNev=data.get('intezmenyRovidNev', 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA'),
-            IntezmenyTelepules=data.get('intezmenyTelepules', 'GYÖNGYÖSPATA'),
+            ApiKulcs=data.get('apiKulcs', DEFAULT_VALUES['apiKulcs']),
+            Azonosito=data.get('azonosito', DEFAULT_VALUES['azonosito']),
+            IntezmenyRovidNev=data.get('intezmenyRovidNev', DEFAULT_VALUES['intezmenyRovidNev']),
+            IntezmenyTelepules=data.get('intezmenyTelepules', DEFAULT_VALUES['intezmenyTelepules']),
             JogosultNev={
-                'Elonev': data.get('elonev', ''),
-                'Keresztnev': data.get('keresztnev', 'Ádám'),
-                'Vezeteknev': data.get('vezeteknev', 'Misuta')
+                'Elonev': data.get('elonev', DEFAULT_VALUES['elonev']),
+                'Keresztnev': data.get('keresztnev', DEFAULT_VALUES['keresztnev']),
+                'Vezeteknev': data.get('vezeteknev', DEFAULT_VALUES['vezeteknev'])
             },
-            LakohelyTelepules=data.get('lakohelyTelepules', 'GYÖNGYÖS'),
-            Munkarend=data.get('munkarend', 'Nappali'),
-            Neme=data.get('neme', 'Ferfi'),
-            Oktazon=data.get('oktazon', '76221103192'),
-            SzuletesiEv=data.get('szuletesiEv', 2010)
+            LakohelyTelepules=data.get('lakohelyTelepules', DEFAULT_VALUES['lakohelyTelepules']),
+            Munkarend=data.get('munkarend', DEFAULT_VALUES['munkarend']),
+            Neme=data.get('neme', DEFAULT_VALUES['neme']),
+            Oktazon=data.get('oktazon', DEFAULT_VALUES['oktazon']),
+            SzuletesiEv=data.get('szuletesiEv', DEFAULT_VALUES['szuletesiEv'])
         )
         
         return jsonify({
             "status": "success",
-            "response": result
+            "response": result,
+            "used_values": {
+                "apiKulcs": data.get('apiKulcs', DEFAULT_VALUES['apiKulcs']),
+                "azonosito": data.get('azonosito', DEFAULT_VALUES['azonosito']),
+                "intezmenyRovidNev": data.get('intezmenyRovidNev', DEFAULT_VALUES['intezmenyRovidNev']),
+                "intezmenyTelepules": data.get('intezmenyTelepules', DEFAULT_VALUES['intezmenyTelepules']),
+                "elonev": data.get('elonev', DEFAULT_VALUES['elonev']),
+                "keresztnev": data.get('keresztnev', DEFAULT_VALUES['keresztnev']),
+                "vezeteknev": data.get('vezeteknev', DEFAULT_VALUES['vezeteknev']),
+                "lakohelyTelepules": data.get('lakohelyTelepules', DEFAULT_VALUES['lakohelyTelepules']),
+                "munkarend": data.get('munkarend', DEFAULT_VALUES['munkarend']),
+                "neme": data.get('neme', DEFAULT_VALUES['neme']),
+                "oktazon": data.get('oktazon', DEFAULT_VALUES['oktazon']),
+                "szuletesiEv": data.get('szuletesiEv', DEFAULT_VALUES['szuletesiEv'])
+            }
         })
         
     except Exception as e:
