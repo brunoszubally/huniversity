@@ -11,7 +11,7 @@ def check_student():
       <soapenv:Header/>
       <soapenv:Body>
         <okt:Keres>
-          <okt1:ApiKulcs>TESZTsa</okt1:ApiKulcs>
+          <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
           <okt1:Azonosito>1223433576</okt1:Azonosito>
           <okt1:IntezmenyRovidNev>KOSSUTH LAJOS ÁLTALÁNOS ISKOLA</okt1:IntezmenyRovidNev>
           <okt1:IntezmenyTelepules>GYÖNGYÖSPATA</okt1:IntezmenyTelepules>
