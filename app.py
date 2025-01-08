@@ -15,7 +15,8 @@ def check_student():
         session.verify = False
         session.headers = {
             'User-Agent': 'Mozilla/5.0',
-            'Content-Type': 'text/xml;charset=UTF-8'
+            'Content-Type': 'text/xml;charset=UTF-8',
+            'SOAPAction': 'http://www.oktatas.hu/Keres'
         }
         
         # WSDL és végpont külön kezelése
@@ -24,46 +25,33 @@ def check_student():
         
         settings = Settings(strict=False)
         
-        # WSDL-ből kliens létrehozása, de explicit végpont megadása
         client = Client(
             wsdl_url,
             transport=Transport(session=session),
-            settings=settings,
-            service_name='PublicServices',
-            port_name='BasicHttpBinding_IPublicServices'
+            settings=settings
         )
         
-        # Végpont explicit beállítása
         service = client.create_service(
             binding_name='{http://www.oktatas.hu/}BasicHttpBinding_IPublicServices',
             address=service_url
         )
 
-        # Request objektumok
-        auth_info = {
-            'ApiKey': 'Hv-Tst-t312-r34q-v921-5318c'
-        }
-
-        request = {
-            'Azonosito': '1223433576',
-            'IntezmenyRovidNev': 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
-            'IntezmenyTelepules': 'GYÖNGYÖSPATA',
-            'JogosultNev': {
+        # A példában szereplő formátumot követjük
+        result = service.Keres(
+            ApiKulcs='TESZT',
+            Azonosito='1223433576',
+            IntezmenyRovidNev='KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
+            IntezmenyTelepules='GYÖNGYÖSPATA',
+            JogosultNev={
                 'Elonev': '',
                 'Keresztnev': 'Ádám',
                 'Vezeteknev': 'Misuta'
             },
-            'LakohelyTelepules': 'GYÖNGYÖS',
-            'Munkarend': 'Nappali',
-            'Neme': 'Ferfi',
-            'Oktazon': '76221103192',
-            'SzuletesiEv': 2010
-        }
-
-        # Szolgáltatás hívása az explicit végponton
-        result = service.CheckJogosultsag(
-            authInfo=auth_info,
-            request=request
+            LakohelyTelepules='GYÖNGYÖS',
+            Munkarend='Nappali',
+            Neme='Ferfi',
+            Oktazon='76221103192',
+            SzuletesiEv=2010
         )
         
         return jsonify({
