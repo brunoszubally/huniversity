@@ -22,9 +22,21 @@ def check_student():
             'ApiKey': 'Hv-Tst-t312-r34q-v921-5318c'
         }
 
-        # Request objektum létrehozása
+        # Request objektum létrehozása a példa alapján
         request = {
-            'OktatasiAzonosito': '76221103192'
+            'Azonosito': '1223433576',
+            'IntezmenyRovidNev': 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
+            'IntezmenyTelepules': 'GYÖNGYÖSPATA',
+            'JogosultNev': {
+                'Elonev': '',
+                'Keresztnev': 'Ádám',
+                'Vezeteknev': 'Misuta'
+            },
+            'LakohelyTelepules': 'GYÖNGYÖS',
+            'Munkarend': 'Nappali',
+            'Neme': 'Ferfi',
+            'Oktazon': '76221103192',
+            'SzuletesiEv': 2010
         }
 
         # A helyes paraméterstruktúrával hívjuk meg
