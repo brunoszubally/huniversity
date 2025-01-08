@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 import requests
 import urllib3
 import xmltodict
@@ -12,22 +12,10 @@ app = Flask(__name__)
 @app.route('/check-student', methods=['GET'])
 def check_student():
     try:
-        # Azonosító lekérése a query paraméterből
-        azon = request.args.get('azonosito')
-        if not azon:
-            return jsonify({
-                "status": "error",
-                "message": "Az 'azonosito' paraméter kötelező."
-            }), 400
+        # Fix azonosító beállítása
+        azon = "1210000941"  # Helyettesítsd a kívánt fix értékkel
 
-        # Validáció: ellenőrizzük, hogy azonosító csak számokat tartalmaz-e
-        if not azon.isdigit():
-            return jsonify({
-                "status": "error",
-                "message": "Az 'azonosito' csak számokat tartalmazhat."
-            }), 400
-
-        # Előre definiált SOAP kérés XML sablon, az 'azon' változó beillesztése
+        # Előre definiált SOAP kérés XML sablon, a fix 'azon' érték beillesztése
         soap_request = f'''
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
             <soapenv:Header/>
