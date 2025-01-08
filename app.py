@@ -17,7 +17,7 @@ def check_student():
             <soapenv:Header/>
             <soapenv:Body>
                 <okt:DiakigazolvanyJogosultsagLekerdezes>
-                    <okt:ApiKulcs>TESZT</okt:ApiKulcs>
+                    <okt:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt:ApiKulcs>
                     <okt:Azonosito>1210000825</okt:Azonosito>
                     <okt:IntezmenyRovidNev>Balassi Bálint Gimnázium</okt:IntezmenyRovidNev>
                     <okt:IntezmenyTelepules>Eger</okt:IntezmenyTelepules>
