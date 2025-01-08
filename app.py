@@ -15,48 +15,41 @@ def check_student():
         session.verify = False
         session.headers = {
             'User-Agent': 'Mozilla/5.0',
-            'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/Keres'
+            'Content-Type': 'text/xml;charset=UTF-8'
         }
         
-        # WSDL és végpont külön kezelése
         wsdl_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
-        service_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
-        
-        settings = Settings(strict=False)
-        
-        client = Client(
-            wsdl_url,
-            transport=Transport(session=session),
-            settings=settings
-        )
-        
-        service = client.create_service(
-            binding_name='{http://www.oktatas.hu/}BasicHttpBinding_IPublicServices',
-            address=service_url
-        )
+        client = Client(wsdl_url, transport=Transport(session=session))
 
-        # A példában szereplő formátumot követjük
-        result = service.Keres(
-            ApiKulcs='TESZT',
-            Azonosito='1223433576',
-            IntezmenyRovidNev='KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
-            IntezmenyTelepules='GYÖNGYÖSPATA',
-            JogosultNev={
-                'Elonev': '',
-                'Keresztnev': 'Ádám',
-                'Vezeteknev': 'Misuta'
-            },
-            LakohelyTelepules='GYÖNGYÖS',
-            Munkarend='Nappali',
-            Neme='Ferfi',
-            Oktazon='76221103192',
-            SzuletesiEv=2010
-        )
+        # Szolgáltatás részleteinek kigyűjtése
+        service_info = {}
         
+        # Szolgáltatások listázása
+        for service in client.wsdl.services.values():
+            service_info[service.name] = {
+                "ports": {}
+            }
+            
+            # Portok listázása
+            for port in service.ports.values():
+                service_info[service.name]["ports"][port.name] = {
+                    "operations": []
+                }
+                
+                # Műveletek listázása
+                for operation in port.binding._operations.values():
+                    service_info[service.name]["ports"][port.name]["operations"].append({
+                        "name": operation.name,
+                        "input": str(operation.input),
+                        "output": str(operation.output)
+                    })
+
         return jsonify({
             "status": "success",
-            "response": result
+            "service_info": service_info,
+            "bindings": list(client.wsdl.bindings.keys()),
+            "messages": list(client.wsdl.messages.keys()),
+            "types": list(client.wsdl.types.types.keys()) if client.wsdl.types else []
         })
         
     except Exception as e:
