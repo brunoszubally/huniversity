@@ -3,3 +3,4 @@ flask
 gunicorn
 zeep
 urllib3
+xmltodict

@@ -1,7 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 import urllib3
 from datetime import datetime
+import xmltodict
 
 # SSL figyelmeztetések letiltása
 urllib3.disable_warnings()
@@ -11,14 +12,29 @@ app = Flask(__name__)
 @app.route('/check-student', methods=['GET'])
 def check_student():
     try:
-        # Előre definiált SOAP kérés XML sablon a dokumentáció alapján
-        soap_request = '''
+        # Azonosító lekérése a query paraméterből
+        azon = request.args.get('azonosito')
+        if not azon:
+            return jsonify({
+                "status": "error",
+                "message": "Az 'azonosito' paraméter kötelező."
+            }), 400
+
+        # Validáció: ellenőrizzük, hogy azonosító csak számokat tartalmaz-e
+        if not azon.isdigit():
+            return jsonify({
+                "status": "error",
+                "message": "Az 'azonosito' csak számokat tartalmazhat."
+            }), 400
+
+        # Előre definiált SOAP kérés XML sablon, az 'azon' változó beillesztése
+        soap_request = f'''
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
             <soapenv:Header/>
             <soapenv:Body>
                 <okt:Keres>
                     <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
-                    <okt1:Azonosito>1210000941</okt1:Azonosito>
+                    <okt1:Azonosito>{azon}</okt1:Azonosito>
                 </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
@@ -29,7 +45,7 @@ def check_student():
         
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/DiakigazolvanyJogosultsagLekerdezes',  # Pontosított SOAPAction
+            'SOAPAction': '"http://www.oktatas.hu/IPublicServices/Keres"',  # Idézőjelek
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/xml, application/xml'
         }
@@ -51,13 +67,24 @@ def check_student():
         print(f"Válasz fejléc: {dict(response.headers)}")
         print(f"Válasz törzse: {response.text}")
 
-        return jsonify({
-            "status": "success",
-            "http_status": response.status_code,
-            "headers": dict(response.headers),
-            "content_type": response.headers.get('content-type', ''),
-            "response": response.text
-        })
+        if response.status_code == 200:
+            # Válasz XML feldolgozása JSON formátumba
+            response_dict = xmltodict.parse(response.content)
+            return jsonify({
+                "status": "success",
+                "http_status": response.status_code,
+                "headers": dict(response.headers),
+                "content_type": response.headers.get('content-type', ''),
+                "response": response_dict
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "http_status": response.status_code,
+                "headers": dict(response.headers),
+                "content_type": response.headers.get('content-type', ''),
+                "response": response.text
+            }), response.status_code
 
     except Exception as e:
         print(f"Hiba történt: {str(e)}")
