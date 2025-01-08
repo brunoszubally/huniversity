@@ -57,7 +57,7 @@ def check_student():
         
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': '"http://www.oktatas.hu/IPublicServices/Keres"',  # Idézőjelek
+            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/Keres',  # Idézőjelek eltávolítása
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/xml, application/xml'
         }
