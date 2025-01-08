@@ -1,7 +1,21 @@
+from flask import Flask, jsonify, request
 import requests
 import urllib3
+from datetime import datetime
+import os
+
 urllib3.disable_warnings()
 
+app = Flask(__name__)
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        "status": "ok",
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.route('/wsdl', methods=['GET'])
 def get_wsdl():
     url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
     
@@ -12,7 +26,6 @@ def get_wsdl():
     }
     
     try:
-        print(f"Fetching WSDL from: {url}")
         response = requests.get(
             url, 
             headers=headers,
@@ -20,21 +33,21 @@ def get_wsdl():
             timeout=30
         )
         
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
-        
-        if response.status_code == 200:
-            with open('service.wsdl', 'wb') as f:
-                f.write(response.content)
-            print("WSDL saved to service.wsdl")
-            return True
-        else:
-            print(f"Failed to fetch WSDL: {response.text}")
-            return False
+        return jsonify({
+            "status": "success",
+            "http_status": response.status_code,
+            "headers": dict(response.headers),
+            "content_length": len(response.content),
+            "content_type": response.headers.get('content-type', ''),
+            "content": response.text[:1000] if response.status_code == 200 else None
+        })
             
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return False
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "error_type": str(type(e))
+        }), 500
 
-if __name__ == "__main__":
-    get_wsdl() 
+if __name__ == '__main__':
+    app.run(debug=True) 
