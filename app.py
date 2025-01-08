@@ -18,19 +18,37 @@ def check_student():
         session = Session()
         retry_strategy = Retry(
             total=3,
-            backoff_factor=1,
+            backoff_factor=0.5,
             status_forcelist=[408, 429, 500, 502, 503, 504],
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         
-        # SSL beállítások
+        # Proxy beállítások (ha szükséges)
+        proxies = {
+            'http': 'http://proxy.example.com:8080',
+            'https': 'http://proxy.example.com:8080'
+        }
+        session.proxies = proxies
+        
         session.verify = False
-        session.timeout = 30  # timeout másodpercben
+        session.timeout = 60
+        
+        # További HTTP fejlécek
+        session.headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'text/xml,application/xml,application/xhtml+xml,text/html',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive'
+        }
         
         # SOAP kliens beállítások
-        settings = Settings(strict=False, xml_huge_tree=True)
+        settings = Settings(
+            strict=False,
+            xml_huge_tree=True,
+            raw_response=True
+        )
         
         client = Client(
             'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc?wsdl',
