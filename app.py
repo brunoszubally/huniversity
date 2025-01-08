@@ -22,34 +22,39 @@ def check_student():
         client = Client(wsdl_url, transport=Transport(session=session))
 
         # Szolgáltatás részleteinek kigyűjtése
-        service_info = {}
+        service_details = {
+            "services": [],
+            "operations": [],
+            "bindings": [],
+            "types": []
+        }
         
-        # Szolgáltatások listázása
+        # Szolgáltatások és műveletek listázása
         for service in client.wsdl.services.values():
-            service_info[service.name] = {
-                "ports": {}
-            }
+            service_details["services"].append(service.name)
             
-            # Portok listázása
             for port in service.ports.values():
-                service_info[service.name]["ports"][port.name] = {
-                    "operations": []
-                }
-                
-                # Műveletek listázása
                 for operation in port.binding._operations.values():
-                    service_info[service.name]["ports"][port.name]["operations"].append({
-                        "name": operation.name,
-                        "input": str(operation.input),
-                        "output": str(operation.output)
+                    service_details["operations"].append({
+                        "service": service.name,
+                        "port": port.name,
+                        "operation": operation.name,
+                        "input": str(operation.input.signature()) if hasattr(operation.input, 'signature') else str(operation.input),
+                        "output": str(operation.output.signature()) if hasattr(operation.output, 'signature') else str(operation.output)
                     })
+
+        # Binding-ok listázása
+        for binding in client.wsdl.bindings.values():
+            service_details["bindings"].append(str(binding))
+
+        # Típusok listázása (ha vannak)
+        if client.wsdl.types:
+            for type_obj in client.wsdl.types.types:
+                service_details["types"].append(str(type_obj))
 
         return jsonify({
             "status": "success",
-            "service_info": service_info,
-            "bindings": list(client.wsdl.bindings.keys()),
-            "messages": list(client.wsdl.messages.keys()),
-            "types": list(client.wsdl.types.types.keys()) if client.wsdl.types else []
+            "service_details": service_details
         })
         
     except Exception as e:
