@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request
 import requests
 import urllib3
-from datetime import datetime
 import xmltodict
+from datetime import datetime
 
 # SSL figyelmeztetések letiltása
 urllib3.disable_warnings()
@@ -35,6 +35,18 @@ def check_student():
                 <okt:Keres>
                     <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
                     <okt1:Azonosito>{azon}</okt1:Azonosito>
+                    <okt1:IntezmenyRovidNev>KOSSUTH LAJOS ÁLTALÁNOS ISKOLA</okt1:IntezmenyRovidNev>
+                    <okt1:IntezmenyTelepules>GYÖNGYÖSPATA</okt1:IntezmenyTelepules>
+                    <okt1:JogosultNev>
+                        <okt1:Elonev/>
+                        <okt1:Keresztnev>Ádám</okt1:Keresztnev>
+                        <okt1:Vezeteknev>Misuta</okt1:Vezeteknev>
+                    </okt1:JogosultNev>
+                    <okt1:LakohelyTelepules>GYÖNGYÖS</okt1:LakohelyTelepules>
+                    <okt1:Munkarend>NAPPALI</okt1:Munkarend>
+                    <okt1:Neme>F</okt1:Neme>
+                    <okt1:Oktazon>76221103192</okt1:Oktazon>
+                    <okt1:SzuletesiEv>2010</okt1:SzuletesiEv>
                 </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
