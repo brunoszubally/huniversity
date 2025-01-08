@@ -6,13 +6,13 @@ app = Flask(__name__)
 @app.route('/check', methods=['GET'])
 def check_student():
     soap_request = """
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
       <soapenv:Header/>
       <soapenv:Body>
-        <okt:Keres>
-          <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
-          <okt1:Oktazon>76221103192</okt1:Oktazon>
-        </okt:Keres>
+        <tem:Ellenoriz>
+          <tem:apiKulcs>Hv-Tst-t312-r34q-v921-5318c</tem:apiKulcs>
+          <tem:oktatasiAzonosito>76221103192</tem:oktatasiAzonosito>
+        </tem:Ellenoriz>
       </soapenv:Body>
     </soapenv:Envelope>
     """
@@ -20,7 +20,7 @@ def check_student():
     url = "https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc"
     headers = {
         "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "http://www.oktatas.hu/Keres"
+        "SOAPAction": "http://tempuri.org/IPublicServices/Ellenoriz"
     }
 
     response = requests.post(url, data=soap_request, headers=headers)
