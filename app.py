@@ -17,10 +17,20 @@ def check_student():
             transport=Transport(session=session)
         )
 
-        # A helyes művelet nevével hívjuk meg
+        # AuthInfo objektum létrehozása
+        auth_info = {
+            'ApiKey': 'Hv-Tst-t312-r34q-v921-5318c'
+        }
+
+        # Request objektum létrehozása
+        request = {
+            'OktatasiAzonosito': '76221103192'
+        }
+
+        # A helyes paraméterstruktúrával hívjuk meg
         result = client.service.CheckJogosultsag(
-            apiKulcs='Hv-Tst-t312-r34q-v921-5318c',
-            oktatasiAzonosito='76221103192'
+            authInfo=auth_info,
+            request=request
         )
         
         return jsonify({
