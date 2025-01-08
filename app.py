@@ -17,25 +17,26 @@ def check_student():
             transport=Transport(session=session)
         )
 
-        # Kiírjuk a rendelkezésre álló műveleteket
-        print("Elérhető műveletek:")
+        # Szolgáltatások listázása
+        available_operations = []
         for service in client.wsdl.services.values():
-            print("Service:", service.name)
+            print(f"\nService: {service.name}")
+            available_operations.append(f"Service: {service.name}")
+            
             for port in service.ports.values():
-                print("Port:", port.name)
-                for op in port.binding._operations.values():
-                    print(" -", op.name)
-
-        # Most már a helyes művelet nevével próbálkozunk
-        result = client.service.ellenoriz(  # kisbetűvel próbáljuk
-            apiKulcs='Hv-Tst-t312-r34q-v921-5318c',
-            oktatasiAzonosito='76221103192'
-        )
+                print(f"Port: {port.name}")
+                available_operations.append(f"Port: {port.name}")
+                
+                operations = port.binding._operations.values()
+                for operation in operations:
+                    print(f"Operation: {operation.name}")
+                    available_operations.append(f"Operation: {operation.name}")
         
         return jsonify({
             "status": "success",
-            "response": result
+            "available_operations": available_operations
         })
+        
     except Exception as e:
         return jsonify({
             "status": "error",
