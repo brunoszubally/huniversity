@@ -21,40 +21,27 @@ def check_student():
         wsdl_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
         client = Client(wsdl_url, transport=Transport(session=session))
 
-        # Szolgáltatás részleteinek kigyűjtése
-        service_details = {
-            "services": [],
-            "operations": [],
-            "bindings": [],
-            "types": []
-        }
+        # A DiakigazolvanyJogosultsagLekerdezes műveletet használjuk
+        result = client.service.DiakigazolvanyJogosultsagLekerdezes(
+            ApiKulcs='Hv-Tst-t312-r34q-v921-5318c',
+            Azonosito='1223433576',
+            IntezmenyRovidNev='KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
+            IntezmenyTelepules='GYÖNGYÖSPATA',
+            JogosultNev={
+                'Elonev': '',
+                'Keresztnev': 'Ádám',
+                'Vezeteknev': 'Misuta'
+            },
+            LakohelyTelepules='GYÖNGYÖS',
+            Munkarend='Nappali',  # Ez egy enum, lehet hogy számot vár
+            Neme='Ferfi',         # Ez is enum
+            Oktazon='76221103192',
+            SzuletesiEv=2010
+        )
         
-        # Szolgáltatások és műveletek listázása
-        for service in client.wsdl.services.values():
-            service_details["services"].append(service.name)
-            
-            for port in service.ports.values():
-                for operation in port.binding._operations.values():
-                    service_details["operations"].append({
-                        "service": service.name,
-                        "port": port.name,
-                        "operation": operation.name,
-                        "input": str(operation.input.signature()) if hasattr(operation.input, 'signature') else str(operation.input),
-                        "output": str(operation.output.signature()) if hasattr(operation.output, 'signature') else str(operation.output)
-                    })
-
-        # Binding-ok listázása
-        for binding in client.wsdl.bindings.values():
-            service_details["bindings"].append(str(binding))
-
-        # Típusok listázása (ha vannak)
-        if client.wsdl.types:
-            for type_obj in client.wsdl.types.types:
-                service_details["types"].append(str(type_obj))
-
         return jsonify({
             "status": "success",
-            "service_details": service_details
+            "response": result
         })
         
     except Exception as e:
