@@ -2,49 +2,48 @@ from flask import Flask, jsonify
 from zeep import Client, Settings
 from zeep.transports import Transport
 from requests import Session
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 import urllib3
 
-# SSL figyelmeztetések kikapcsolása
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.disable_warnings()
 
 app = Flask(__name__)
 
 @app.route('/check', methods=['GET'])
 def check_student():
     try:
-        # Session beállítása retry logikával
         session = Session()
-        retry_strategy = Retry(
-            total=5,  # összes próbálkozás
-            backoff_factor=0.5,  # várakozási idő a próbálkozások között
-            status_forcelist=[500, 502, 503, 504]
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        
-        # SSL és timeout beállítások
         session.verify = False
-        session.timeout = (5, 30)  # (connect timeout, read timeout)
+        session.headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Content-Type': 'text/xml;charset=UTF-8'
+        }
         
-        # SOAP kliens beállítások
-        settings = Settings(strict=False, xml_huge_tree=True)
-        
+        # WSDL és végpont külön kezelése
         wsdl_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
+        service_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
+        
+        settings = Settings(strict=False)
+        
+        # WSDL-ből kliens létrehozása, de explicit végpont megadása
         client = Client(
             wsdl_url,
             transport=Transport(session=session),
-            settings=settings
+            settings=settings,
+            service_name='PublicServices',
+            port_name='BasicHttpBinding_IPublicServices'
+        )
+        
+        # Végpont explicit beállítása
+        service = client.create_service(
+            binding_name='{http://www.oktatas.hu/}BasicHttpBinding_IPublicServices',
+            address=service_url
         )
 
-        # AuthInfo objektum létrehozása
+        # Request objektumok
         auth_info = {
             'ApiKey': 'Hv-Tst-t312-r34q-v921-5318c'
         }
 
-        # Request objektum létrehozása a példa alapján
         request = {
             'Azonosito': '1223433576',
             'IntezmenyRovidNev': 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA',
@@ -61,8 +60,8 @@ def check_student():
             'SzuletesiEv': 2010
         }
 
-        # A helyes paraméterstruktúrával hívjuk meg
-        result = client.service.CheckJogosultsag(
+        # Szolgáltatás hívása az explicit végponton
+        result = service.CheckJogosultsag(
             authInfo=auth_info,
             request=request
         )
@@ -77,7 +76,7 @@ def check_student():
             "status": "error",
             "message": str(e),
             "error_type": str(type(e)),
-            "details": str(getattr(e, 'detail', ''))  # SOAP hiba részletek
+            "details": str(getattr(e, 'detail', ''))
         }), 500
 
 if __name__ == '__main__':
