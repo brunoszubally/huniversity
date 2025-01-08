@@ -5,9 +5,34 @@ import xmltodict
 from zeep import Client, Settings, Transport
 from zeep.exceptions import Fault
 from datetime import datetime
+from requests import Session
+import logging.config
 
 # SSL figyelmeztetések letiltása
 urllib3.disable_warnings()
+
+# Zeep részletes logolásának engedélyezése
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {
+        'verbose': {
+            'format': '%(name)s: %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'zeep': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    }
+})
 
 app = Flask(__name__)
 
@@ -31,7 +56,9 @@ def check_student():
 
         # Zeep kliens beállítása
         wsdl = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/?SingleWsdl'
-        transport = Transport(timeout=30, verify=False)
+        session = Session()
+        session.verify = False  # FIGYELEM: A verify=False használata biztonsági kockázattal jár
+        transport = Transport(session=session, timeout=30)
         settings = Settings(strict=False, xml_huge_tree=True)
         client = Client(wsdl=wsdl, transport=transport, settings=settings)
 
