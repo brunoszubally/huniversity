@@ -10,27 +10,27 @@ app = Flask(__name__)
 @app.route('/check-student', methods=['GET', 'POST'])
 def check_student():
     try:
-        # SOAP kérés XML sablon a helyes művelettel
+        # SOAP kérés XML sablon a dokumentáció alapján
         soap_request = '''
-        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/">
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
             <soapenv:Header/>
             <soapenv:Body>
-                <okt:DiakigazolvanyJogosultsagLekerdezes>
-                    <okt:ApiKulcs>TESZT</okt:ApiKulcs>
-                    <okt:Azonosito>1223433576</okt:Azonosito>
-                    <okt:IntezmenyRovidNev>KOSSUTH LAJOS ÁLTALÁNOS ISKOLA</okt:IntezmenyRovidNev>
-                    <okt:IntezmenyTelepules>GYÖNGYÖSPATA</okt:IntezmenyTelepules>
-                    <okt:JogosultNev>
-                        <okt:Elonev/>
-                        <okt:Keresztnev>Ádám</okt:Keresztnev>
-                        <okt:Vezeteknev>Misuta</okt:Vezeteknev>
-                    </okt:JogosultNev>
-                    <okt:LakohelyTelepules>GYÖNGYÖS</okt:LakohelyTelepules>
-                    <okt:Munkarend>Nappali</okt:Munkarend>
-                    <okt:Neme>Ferfi</okt:Neme>
-                    <okt:Oktazon>76221103192</okt:Oktazon>
-                    <okt:SzuletesiEv>2010</okt:SzuletesiEv>
-                </okt:DiakigazolvanyJogosultsagLekerdezes>
+                <okt:Keres>
+                    <okt1:ApiKulcs>TESZT</okt1:ApiKulcs>
+                    <okt1:Azonosito>1210000825</okt1:Azonosito>
+                    <okt1:IntezmenyRovidNev>Balassi Bálint Gimnázium</okt1:IntezmenyRovidNev>
+                    <okt1:IntezmenyTelepules>Eger</okt1:IntezmenyTelepules>
+                    <okt1:JogosultNev>
+                        <okt1:Elonev/>
+                        <okt1:Keresztnev>Eszmerálda</okt1:Keresztnev>
+                        <okt1:Vezeteknev>Koncsíta</okt1:Vezeteknev>
+                    </okt1:JogosultNev>
+                    <okt1:LakohelyTelepules>Nagykanizsa</okt1:LakohelyTelepules>
+                    <okt1:Munkarend>NAPPALI</okt1:Munkarend>
+                    <okt1:Neme>N</okt1:Neme>
+                    <okt1:Oktazon>459632</okt1:Oktazon>
+                    <okt1:SzuletesiEv>2004</okt1:SzuletesiEv>
+                </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
         '''
@@ -40,7 +40,7 @@ def check_student():
         
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/DiakigazolvanyJogosultsagLekerdezes',
+            'SOAPAction': 'http://www.oktatas.hu/Keres',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/xml, application/xml'
         }
