@@ -2,4 +2,4 @@ requests
 flask
 gunicorn
 zeep
-rllib3
+urllib3
