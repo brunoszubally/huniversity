@@ -2,47 +2,31 @@ from flask import Flask, jsonify
 from zeep import Client
 from zeep.transports import Transport
 from requests import Session
-import logging.config
+import urllib3
+
+# SSL figyelmeztetések kikapcsolása (csak fejlesztéshez)
+urllib3.disable_warnings()
 
 app = Flask(__name__)
-
-# SOAP debug logging beállítása
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {
-        'verbose': {
-            'format': '%(name)s: %(message)s'
-        }
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'zeep.transports': {
-            'level': 'DEBUG',
-            'propagate': True,
-            'handlers': ['console'],
-        },
-    }
-})
 
 @app.route('/check', methods=['GET'])
 def check_student():
     try:
+        # Session létrehozása
         session = Session()
+        session.verify = False
+        
+        # SOAP kliens létrehozása a dokumentációban szereplő címmel
+        wsdl_url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc?wsdl'
         client = Client(
-            'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc',
+            wsdl_url,
             transport=Transport(session=session)
         )
 
-        # Szolgáltatás hívása fix teszt azonosítóval
+        # Ellenőrzés a teszt adatokkal
         result = client.service.Ellenoriz(
             apiKulcs='Hv-Tst-t312-r34q-v921-5318c',
-            oktatasiAzonosito='76221103192'  # Fix teszt azonosító
+            oktatasiAzonosito='76221103192'
         )
         
         return jsonify({
