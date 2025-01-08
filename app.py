@@ -17,8 +17,8 @@ def check_student():
             <soapenv:Header/>
             <soapenv:Body>
                 <okt:Keres>
-                    <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt:ApiKulcs>
-                    <okt1:Azonosito>1210000825</okt:Azonosito>
+                    <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
+                    <okt1:Azonosito>1210000825</1okt:Azonosito>
                 </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
