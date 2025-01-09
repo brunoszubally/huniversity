@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request
 import requests
 import urllib3
-import xml.etree.ElementTree as ET
 import xmltodict
+from datetime import datetime
 
 # SSL figyelmeztetések letiltása
 urllib3.disable_warnings()
@@ -27,70 +27,37 @@ def check_student():
                 "message": "Az 'azonosito' csak számokat tartalmazhat."
             }), 400
 
-        # SOAP kérés XML dinamikus összeállítása
-        namespaces = {
-            'soapenv': 'http://schemas.xmlsoap.org/soap/envelope/',
-            'okt': 'http://www.oktatas.hu/',
-            'okt1': 'http://www.oktatas.hu'
-        }
-
-        ET.register_namespace('soapenv', namespaces['soapenv'])
-        ET.register_namespace('okt', namespaces['okt'])
-        ET.register_namespace('okt1', namespaces['okt1'])
-
-        envelope = ET.Element(ET.QName(namespaces['soapenv'], 'Envelope'))
-        header = ET.SubElement(envelope, ET.QName(namespaces['soapenv'], 'Header'))
-        body = ET.SubElement(envelope, ET.QName(namespaces['soapenv'], 'Body'))
-        keres = ET.SubElement(body, ET.QName(namespaces['okt'], 'Keres'))
-        
-        # Paraméterek hozzáadása
-        apikulcs = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'ApiKulcs'))
-        apikulcs.text = 'Hv-Tst-t312-r34q-v921-5318c'
-        
-        azonosito = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'Azonosito'))
-        azonosito.text = azon
-        
-        intezmeny_rovid_nev = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'IntezmenyRovidNev'))
-        intezmeny_rovid_nev.text = 'KOSSUTH LAJOS ÁLTALÁNOS ISKOLA'
-        
-        intezmeny_telepules = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'IntezmenyTelepules'))
-        intezmeny_telepules.text = 'GYÖNGYÖSPATA'
-        
-        jogosult_nev = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'JogosultNev'))
-        
-        elonev = ET.SubElement(jogosult_nev, ET.QName(namespaces['okt1'], 'Elonev'))
-        elonev.text = ''
-        
-        keresztnev = ET.SubElement(jogosult_nev, ET.QName(namespaces['okt1'], 'Keresztnev'))
-        keresztnev.text = 'Ádám'
-        
-        vezeteknev = ET.SubElement(jogosult_nev, ET.QName(namespaces['okt1'], 'Vezeteknev'))
-        vezeteknev.text = 'Misuta'
-        
-        lakohely_telepules = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'LakohelyTelepules'))
-        lakohely_telepules.text = 'GYÖNGYÖS'
-        
-        munkarend = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'Munkarend'))
-        munkarend.text = 'NAPPALI'
-        
-        neme = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'Neme'))
-        neme.text = 'F'
-        
-        oktazon = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'Oktazon'))
-        oktazon.text = '76221103192'
-        
-        szuletesi_ev = ET.SubElement(keres, ET.QName(namespaces['okt1'], 'SzuletesiEv'))
-        szuletesi_ev.text = '2010'
-
-        # XML string előállítása
-        soap_request = ET.tostring(envelope, encoding='utf-8', method='xml').decode('utf-8')
+        # Előre definiált SOAP kérés XML sablon, az 'azon' változó beillesztése CDATA-val
+        soap_request = f'''
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
+            <soapenv:Header/>
+            <soapenv:Body>
+                <okt:Keres>
+                    <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
+                    <okt1:Azonosito><![CDATA[{azon}]]></okt1:Azonosito>
+                    <okt1:IntezmenyRovidNev>KOSSUTH LAJOS ÁLTALÁNOS ISKOLA</okt1:IntezmenyRovidNev>
+                    <okt1:IntezmenyTelepules>GYÖNGYÖSPATA</okt1:IntezmenyTelepules>
+                    <okt1:JogosultNev>
+                        <okt1:Elonev/>
+                        <okt1:Keresztnev>Ádám</okt1:Keresztnev>
+                        <okt1:Vezeteknev>Misuta</okt1:Vezeteknev>
+                    </okt1:JogosultNev>
+                    <okt1:LakohelyTelepules>GYÖNGYÖS</okt1:LakohelyTelepules>
+                    <okt1:Munkarend>NAPPALI</okt1:Munkarend>
+                    <okt1:Neme>F</okt1:Neme>
+                    <okt1:Oktazon>76221103192</okt1:Oktazon>
+                    <okt1:SzuletesiEv>2010</okt1:SzuletesiEv>
+                </okt:Keres>
+            </soapenv:Body>
+        </soapenv:Envelope>
+        '''
 
         # SOAP kérés küldése
         url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
-
+        
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/Keres',
+            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/Keres',  # Idézőjelek eltávolítása
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/xml, application/xml'
         }
