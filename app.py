@@ -11,9 +11,15 @@ app = Flask(__name__)
 @app.route('/check-student', methods=['GET'])
 def check_student():
     try:
-        # Azonosító lekérése a query paraméterből, alapértelmezett érték: 1210000914
-        azonosito = request.args.get('azonosito', '1210000914')
+        # Azonosító lekérése a query paraméterből - kötelező paraméter
+        azonosito = request.args.get('azonosito')
         
+        if not azonosito:
+            return jsonify({
+                "status": "error",
+                "message": "Az 'azonosito' paraméter megadása kötelező"
+            }), 400
+            
         # SOAP kérés XML sablon dinamikus azonosítóval
         soap_request = f'''
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
