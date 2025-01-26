@@ -38,48 +38,34 @@ def check_student():
         
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
-            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/DiakigazolvanyJogosultsagLekerdezes',  # Pontosított SOAPAction
+            'SOAPAction': 'http://www.oktatas.hu/IPublicServices/DiakigazolvanyJogosultsagLekerdezes',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/xml, application/xml'
         }
-
-        print("SOAP kérés küldése...")
-        print(f"Kérés URL: {url}")
-        print(f"Kérés fejléc: {headers}")
-        print(f"Kérés törzse: {soap_request}")
 
         response = requests.post(
             url=url,
             data=soap_request.encode('utf-8'),
             headers=headers,
-            verify=False,  # FIGYELEM: A verify=False használata biztonsági kockázattal jár
+            verify=False,
             timeout=30
         )
 
-        print(f"Válasz státuszkód: {response.status_code}")
-        print(f"Válasz fejléc: {dict(response.headers)}")
-        print(f"Válasz törzse: {response.text}")
-
-        return jsonify({
-            "status": "success",
-            "http_status": response.status_code,
-            "headers": dict(response.headers),
-            "content_type": response.headers.get('content-type', ''),
-            "response": response.text
-        })
+        # XML válasz feldolgozása és egyszerűsített válasz visszaadása
+        if 'KedvezmenyreJogosult' in response.text:
+            return jsonify({"status": "success", "code": 1})
+        elif 'KedvezmenyreNemJogosult' in response.text:
+            return jsonify({"status": "success", "code": 2})
+        elif 'NemLetezoKartya' in response.text:
+            return jsonify({"status": "success", "code": 3})
+        else:
+            return jsonify({"status": "error", "code": 0, "message": "Ismeretlen válasz"})
 
     except Exception as e:
-        print(f"Hiba történt: {str(e)}")
         return jsonify({
             "status": "error",
-            "message": str(e),
-            "error_type": str(type(e)),
-            "details": str(getattr(e, 'detail', '')),
-            "request": {
-                "url": url,
-                "headers": headers,
-                "body": soap_request
-            }
+            "code": 0,
+            "message": str(e)
         }), 500
 
 if __name__ == '__main__':
