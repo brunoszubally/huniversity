@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 import urllib3
 from datetime import datetime
@@ -11,14 +11,17 @@ app = Flask(__name__)
 @app.route('/check-student', methods=['GET'])
 def check_student():
     try:
-        # Előre definiált SOAP kérés XML sablon a dokumentáció alapján
-        soap_request = '''
+        # Azonosító lekérése a query paraméterből, alapértelmezett érték: 1210000914
+        azonosito = request.args.get('azonosito', '1210000914')
+        
+        # SOAP kérés XML sablon dinamikus azonosítóval
+        soap_request = f'''
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
             <soapenv:Header/>
             <soapenv:Body>
                 <okt:Keres>
                     <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
-                    <okt1:Azonosito>1210000914</okt1:Azonosito>
+                    <okt1:Azonosito>{azonosito}</okt1:Azonosito>
                 </okt:Keres>
             </soapenv:Body>
         </soapenv:Envelope>
