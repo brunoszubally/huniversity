@@ -26,7 +26,7 @@ def check_student():
             <soapenv:Header/>
             <soapenv:Body>
                 <okt:Keres>
-                    <okt1:ApiKulcs>Hv-Tst-t312-r34q-v921-5318c</okt1:ApiKulcs>
+                    <okt1:ApiKulcs>Hv-Lve-l428-s67t-c156-2465b</okt1:ApiKulcs>
                     <okt1:Azonosito>{azonosito}</okt1:Azonosito>
                 </okt:Keres>
             </soapenv:Body>
@@ -34,7 +34,7 @@ def check_student():
         '''
 
         # SOAP kérés küldése
-        url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-test/publicservices.svc'
+        url = 'https://ws.oh.gov.hu/oktig-kartyaelfogado-live/publicservices.svc'
         
         headers = {
             'Content-Type': 'text/xml;charset=UTF-8',
