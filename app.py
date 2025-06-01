@@ -8,6 +8,14 @@ urllib3.disable_warnings()
 
 app = Flask(__name__)
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({
+        "status": "success",
+        "message": "pong",
+        "timestamp": datetime.now().isoformat()
+    })
+
 @app.route('/check-student', methods=['GET'])
 def check_student():
     try:
