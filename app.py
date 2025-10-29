@@ -28,8 +28,8 @@ def check_student():
                 "message": "Az 'azonosito' paraméter megadása kötelező"
             }), 400
 
-        # Validáció: ha nem 10 karakter ÉS nem 0-val vagy 1-gyel kezdődik
-        if len(azonosito) != 10 and not (azonosito.startswith('0') or azonosito.startswith('1')):
+        # Validáció: csak akkor valid, ha pontosan 10 karakter ÉS 0-val vagy 1-gyel kezdődik
+        if len(azonosito) != 10 or not (azonosito.startswith('0') or azonosito.startswith('1')):
             return jsonify({
                 "status": "error",
                 "code": 4,
