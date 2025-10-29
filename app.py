@@ -27,7 +27,15 @@ def check_student():
                 "status": "error",
                 "message": "Az 'azonosito' paraméter megadása kötelező"
             }), 400
-            
+
+        # Validáció: ha nem 10 karakter ÉS nem 0-val vagy 1-gyel kezdődik
+        if len(azonosito) != 10 and not (azonosito.startswith('0') or azonosito.startswith('1')):
+            return jsonify({
+                "status": "error",
+                "code": 4,
+                "message": "Érvénytelen azonosító formátum"
+            }), 400
+
         # SOAP kérés XML sablon dinamikus azonosítóval
         soap_request = f'''
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:okt="http://www.oktatas.hu/" xmlns:okt1="http://www.oktatas.hu">
